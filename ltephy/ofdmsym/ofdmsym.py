@@ -21,8 +21,8 @@ class OfdmSym(object):
         '''
         OfdmSym:tx
         '''
-        syms_shifted = np.fft.fftshift(syms_in, axes=0)
-        syms_fd = np.fft.fft(syms_shifted, axis=0)
+        syms_in_shifted = np.fft.fftshift(syms_in, axes=0)
+        syms_fd = np.fft.fft(syms_in_shifted, axis=0)
         syms_td = np.fft.ifft(syms_fd, axis=0)
         return syms_td
 
@@ -32,6 +32,6 @@ class OfdmSym(object):
         '''
         syms_fd = np.fft.fft(syms_in, axis=0)
         syms_td = np.fft.ifft(syms_fd, axis=0)
-        syms_shifted = np.fft.ifftshift(syms_td, axes=0)
-        return syms_shifted
+        syms_out_shifted = np.fft.ifftshift(syms_td, axes=0)
+        return syms_out_shifted
 
