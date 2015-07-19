@@ -43,7 +43,6 @@ def test_ofdmsym_complex_vec():
     rx = osg.rx(tx)
     # Test(s)
     np.testing.assert_allclose(rx, syms)
-    #np.testing.assert_array_almost_equal(rx, syms, decimal=14)
 
 def test_ofdmsym_complex_mat():
     '''
@@ -65,4 +64,24 @@ def test_ofdmsym_complex_mat():
     rx = osg.rx(tx)
     # Test(s)
     np.testing.assert_allclose(rx, syms)
-    #np.testing.assert_array_almost_equal(rx, syms, decimal=14)
+
+def test_ofdmsym_weighted_complex_mat():
+    '''
+    Test:OfdmSym:test_ofdmsym_weighted_complex_mat
+    '''
+    # Parameters
+    params = {
+        'nFFT': 1024,
+        'nSym': 12
+    }
+    # OFDM symbol generator
+    osg = OfdmSym(params)
+    # Input symbols
+    syms = np.sqrt(1.0/2.0) * \
+        ((2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1) + \
+        1j*(2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1))
+    # Chain
+    tx = osg.tx(syms)
+    rx = osg.rx(tx)
+    # Test(s)
+    np.testing.assert_allclose(rx, syms)
