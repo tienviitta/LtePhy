@@ -21,11 +21,17 @@ class OfdmSym(object):
         '''
         OfdmSym:tx
         '''
-        return np.fft.ifft(np.fft.fft(np.fft.fftshift(syms_in, axes=0), axis=0), axis=0)
+        syms_shifted = np.fft.fftshift(syms_in, axes=0)
+        syms_fd = np.fft.fft(syms_shifted, axis=0)
+        syms_td = np.fft.ifft(syms_fd, axis=0)
+        return syms_td
 
     def rx(self, syms_in):
         '''
         OfdmSym:rx
         '''
-        return np.fft.ifftshift(np.fft.ifft(np.fft.fft(syms_in, axis=0), axis=0), axes=0)
+        syms_fd = np.fft.fft(syms_in, axis=0)
+        syms_td = np.fft.ifft(syms_fd, axis=0)
+        syms_shifted = np.fft.ifftshift(syms_td, axes=0)
+        return syms_shifted
 
