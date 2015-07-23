@@ -1,87 +1,36 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from nose.tools import *
 from ltephy.ofdmsym.ofdmsym import OfdmSym
 import numpy as np
+
+phy_res_blocks = [6, 15, 25, 50, 75, 100]
+subcarriers = 12
 
 def setup():
     pass
 def teardown():
     pass
 
-def test_ofdmsym_real_vec():
+def test_ofdmsym_sys_bw0():
     '''
-    Test:OfdmSym:test_ofdmsym_real_vec
+    Test:OfdmSym:test_ofdmsym_sys_bw0
     '''
     # Parameters
     params = {
-        'nFFT': 128
+        'sys_bw': 0,
+        'normal_cp': True
     }
     # OFDM symbol generator
     osg = OfdmSym(params)
     # Input symbols
-    syms = 2 * np.random.randint(2, size=params['nFFT']) - 1
-    # Chain
-    tx = osg.tx(syms)
-    rx = osg.rx(tx)
-    # Test(s)
-    np.testing.assert_allclose(rx, syms)
-    #np.testing.assert_array_almost_equal(rx, syms, decimal=14)
-
-def test_ofdmsym_complex_vec():
-    '''
-    Test:OfdmSym:test_ofdmsym_complex_vec
-    '''
-    # Parameters
-    params = {
-        'nFFT': 2048
-    }
-    # OFDM symbol generator
-    osg = OfdmSym(params)
-    # Input symbols
-    syms = (2 * np.random.randint(2, size=params['nFFT']) - 1) + 1j*(2 * np.random.randint(2, size=params['nFFT']) - 1)
-    # Chain
-    tx = osg.tx(syms)
-    rx = osg.rx(tx)
-    # Test(s)
-    np.testing.assert_allclose(rx, syms)
-
-def test_ofdmsym_complex_mat():
-    '''
-    Test:OfdmSym:test_ofdmsym_complex_mat
-    '''
-    # Parameters
-    params = {
-        'nFFT': 2048,
-        'nSym': 14
-    }
-    # OFDM symbol generator
-    osg = OfdmSym(params)
-    # Input symbols
-    syms = \
-        (2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1) + \
-        1j*(2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1)
-    # Chain
-    tx = osg.tx(syms)
-    rx = osg.rx(tx)
-    # Test(s)
-    np.testing.assert_allclose(rx, syms)
-
-def test_ofdmsym_weighted_complex_mat():
-    '''
-    Test:OfdmSym:test_ofdmsym_weighted_complex_mat
-    '''
-    # Parameters
-    params = {
-        'nFFT': 1024,
-        'nSym': 12
-    }
-    # OFDM symbol generator
-    osg = OfdmSym(params)
-    # Input symbols
+    input_size = (14 if params['normal_cp'] else 12, subcarriers * phy_res_blocks[params['sys_bw']])
     syms = np.sqrt(1.0/2.0) * \
-        ((2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1) + \
-        1j*(2 * np.random.randint(2, size=(params['nFFT'],params['nSym'])) - 1))
+        ((2 * np.random.randint(2, size=input_size) - 1) + \
+        1j*(2 * np.random.randint(2, size=input_size) - 1))
     # Chain
     tx = osg.tx(syms)
-    rx = osg.rx(tx)
+    rx = osg.rx(tx, syms)
     # Test(s)
     np.testing.assert_allclose(rx, syms)
