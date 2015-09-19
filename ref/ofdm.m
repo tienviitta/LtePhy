@@ -3,13 +3,16 @@ pkg load communications
 rand("seed", 12345);
 randn("seed", 12345);
 clear all
-close all
+%close all
 
 %# Chest flag
-LSCHEST = true;
+LSCHEST = false;
+MMSECHEST = true;
+tau_rms = 1; % rms delay estimate???
 
 %# Params
 N_subf = 100;
+%N_subf = 1;
 %# 20 MHz system bandwidth (Note! Slow!)
 %N_prbs = 100;
 %N_fft = 2048;
@@ -44,10 +47,30 @@ end
 N_data = sum(sum(G_lte == 0));
 S_map = find(G_lte == 0);
 
+%# FD MMSE initialization
+if MMSECHEST
+Np = N_crs/length(C_syms);
+Nps = 6;
+df = 1/N_fft;  %1/(ts*Nfft);
+j2pi_tau_df = j*2*pi*tau_rms*df;
+K1 = repmat([0:N_prbs*N_subc-1].',1,Np);
+K2 = repmat([0:Np-1],N_prbs*N_subc,1);
+rf = 1./(1+j2pi_tau_df*(K1-K2*Nps));
+K3 = repmat([0:Np-1].',1,Np);
+K4 = repmat([0:Np-1],Np,1);
+rf2 = 1./(1+j2pi_tau_df*Nps*(K3-K4));
+Rhp = rf;
+end
+
 SNR = [0:2:20];
 %SNR = 30;
 bers = zeros(length(SNR),N_subf);
 for SNR_i = 1:length(SNR)
+  if MMSECHEST
+  snr = 10^(SNR(SNR_i)*0.1);
+  Rpp = rf2 + eye(Np)/snr;
+  W_MMSE = Rhp*inv(Rpp);
+  end
   for SF_i = 1:N_subf
 
     %# Data bits and modulation
@@ -107,12 +130,19 @@ for SNR_i = 1:length(SNR)
     H_fd = interp1(C_subc.', H_LS, (1:N_prbs*N_subc).', 'linear', 'extrap');
     H_td = interp1(C_syms, H_fd.', (1:N_syms), 'linear', 'extrap').';
     end
+    
+    %# Chest (MMSE FD and TD linear interpolation)
+    if MMSECHEST
+    H_LS = R_crs .* conj(S_crs ); %# LS channel estimates
+    H_fd = W_MMSE*H_LS;  %# FD MMSE channel estimate
+    H_td = interp1(C_syms, H_fd.', (1:N_syms), 'linear', 'extrap').';
+    end
 
     %# De-Map data
     Y_data = Y_sf(S_map);
     
     %# Equalizer
-    if LSCHEST
+    if LSCHEST || MMSECHEST
     H_data = H_td(S_map);
     Y_eq = (Y_data .* conj(H_data))./(abs(H_data).^2);
     else
